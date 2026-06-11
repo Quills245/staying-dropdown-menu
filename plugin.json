@@ -1,13 +1,16 @@
 {
   "id": "dropdownMenu",
   "name": "Dropdown Menu",
-  "description": "Configurable bar button that opens a dropdown menu of actions and plugin toggles",
+  "description": "Configurable bar button that opens a dropdown menu of actions, plugin toggles, popouts, and IPC commands",
   "version": "0.5.0",
   "author": "rdannenbring",
   "type": "widget",
+  "category": "utilities",
   "capabilities": ["dankbar-widget"],
   "icon": "expand_circle_down",
   "component": "./DropdownWidget.qml",
   "settings": "./DropdownSettings.qml",
+  "repo": "https://github.com/rdannenbring/dropdown-menu",
+  "screenshot": "https://raw.githubusercontent.com/rdannenbring/dropdown-menu/main/assets/screenshot.png",
   "permissions": ["settings_read", "settings_write", "process"]
 }

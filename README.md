@@ -4,6 +4,12 @@ A [DankMaterialShell](https://github.com/AvengeMedia/DankMaterialShell) (DMS) ba
 
 > Status: **beta** (v0.5.0)
 
+## Screenshots
+
+![Dropdown Menu on the bar](assets/screenshot.png)
+
+![Settings](assets/settings.png)
+
 ## Features
 
 - **One bar button → a menu of anything.** Build a dropdown of mixed item types:
