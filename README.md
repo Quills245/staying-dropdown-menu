@@ -6,9 +6,7 @@ A [DankMaterialShell](https://github.com/AvengeMedia/DankMaterialShell) (DMS) ba
 
 ## Screenshots
 
-![Dropdown Menu on the bar](assets/screenshot.png)
-
-![Settings](assets/settings.png)
+![A Dropdown Menu open on the bar](assets/screenshot.png)
 
 ## Features
 
@@ -61,6 +59,29 @@ Clicking the dropdown on the bar opens/closes its menu.
 ## Permissions
 
 `settings_read`, `settings_write`, `process` (to run shell/IPC commands).
+
+## How it works
+
+Each dropdown is a DMS plugin **variant**, so multiple dropdowns are independent bar widgets. The bar pill is a `PluginComponent`; the menu is its popout.
+
+**Files**
+
+- `DropdownWidget.qml` — the bar pill + popout; dispatches item clicks.
+- `DropdownItem.qml` — a single menu row.
+- `DropdownSettings.qml` — the editor (variants, items, IPC discovery, validation).
+- `DropdownIconPicker.qml` — searchable Material-symbol picker.
+
+**Item model** (stored in variant data)
+
+- `action` — `{ command }`, run via `Process` (`sh -c`).
+- `plugin` — `{ pluginId }`, toggled via `PluginService.togglePlugin` or a built-in `PopoutService` toggle.
+- `popout` — `{ widgetId }`, opened via `BarWidgetService.triggerWidgetPopout` (the widget must be on a bar).
+- IPC actions are stored as `action` items whose command is `dms ipc <target> <fn> [args]` — reusing the action execution path.
+
+**Discovery**
+
+- Global IPC targets/functions come from parsing `dms ipc --help` (the running shell's live handlers).
+- Per-plugin actions: the selected plugin's QML is grepped for `IpcHandler { target: "…" }` and intersected with the live target list, so only working actions are offered.
 
 ## License
 

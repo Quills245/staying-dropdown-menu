@@ -55,13 +55,6 @@ PluginComponent {
                 anchors.verticalCenter: parent.verticalCenter
                 visible: root.pillShowLabel
             }
-
-            DankIcon {
-                name: "expand_more"
-                size: root.iconSize - 8
-                color: Theme.surfaceVariantText
-                anchors.verticalCenter: parent.verticalCenter
-            }
         }
     }
 
@@ -87,13 +80,6 @@ PluginComponent {
                 anchors.horizontalCenter: parent.horizontalCenter
                 horizontalAlignment: Text.AlignHCenter
                 visible: root.pillShowLabel
-            }
-
-            DankIcon {
-                name: "expand_more"
-                size: root.iconSize - 8
-                color: Theme.surfaceVariantText
-                anchors.horizontalCenter: parent.horizontalCenter
             }
         }
     }
