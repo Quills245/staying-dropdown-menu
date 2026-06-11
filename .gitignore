@@ -1,0 +1,10 @@
+# Editor / tooling cruft
+.claude/
+.vscode/
+*.swp
+*~
+
+# Backups
+*.bak
+*.bak.*
+*.orig

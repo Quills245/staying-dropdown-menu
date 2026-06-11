@@ -1,0 +1,13 @@
+{
+  "id": "dropdownMenu",
+  "name": "Dropdown Menu",
+  "description": "Configurable bar button that opens a dropdown menu of actions and plugin toggles",
+  "version": "0.5.0",
+  "author": "rdannenbring",
+  "type": "widget",
+  "capabilities": ["dankbar-widget"],
+  "icon": "expand_circle_down",
+  "component": "./DropdownWidget.qml",
+  "settings": "./DropdownSettings.qml",
+  "permissions": ["settings_read", "settings_write", "process"]
+}
