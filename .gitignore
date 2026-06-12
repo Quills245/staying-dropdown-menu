@@ -7,3 +7,6 @@
 *.bak
 *.bak.*
 *.orig
+
+# Local dev helpers (not published)
+release.sh
