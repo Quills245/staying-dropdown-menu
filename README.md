@@ -6,7 +6,7 @@ A [DankMaterialShell](https://github.com/AvengeMedia/DankMaterialShell) (DMS) ba
 
 ## Screenshots
 
-![A Dropdown Menu open on the bar](assets/screenshot.png)
+![A Dropdown Menu open on the bar](assets/dropdown-menu.png)
 
 ## Features
 

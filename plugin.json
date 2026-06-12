@@ -11,6 +11,6 @@
   "component": "./DropdownWidget.qml",
   "settings": "./DropdownSettings.qml",
   "repo": "https://github.com/rdannenbring/dropdown-menu",
-  "screenshot": "https://raw.githubusercontent.com/rdannenbring/dropdown-menu/main/assets/screenshot.png",
+  "screenshot": "https://raw.githubusercontent.com/rdannenbring/dropdown-menu/main/assets/dropdown-menu.png",
   "permissions": ["settings_read", "settings_write", "process"]
 }
