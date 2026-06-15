@@ -33,27 +33,152 @@ PluginComponent {
     popoutWidth: 280
     popoutHeight: Math.max(64, menuItems.length * 48 + 16)
 
+    // Unique widget ids for "popout" items — each is instantiated off-bar so its
+    // popout can be opened from the menu without the widget being on a bar.
+    readonly property var _popoutTargets: {
+        const out = []
+        for (var i = 0; i < menuItems.length; i++) {
+            const it = menuItems[i]
+            if (it && it.type === "popout" && it.widgetId && out.indexOf(it.widgetId) < 0)
+                out.push(it.widgetId)
+        }
+        return out
+    }
+
+    // Set by whichever bar pill (horizontal/vertical) is currently realized, so
+    // the popout dispatch can reach the on-demand host living in the bar window.
+    property var _popoutHost: null
+
+    // Open a widget's popout: prefer our off-bar instance; fall back to a copy
+    // that's actually placed on a bar (BarWidgetService).
+    function _openWidgetPopout(widgetId) {
+        if (_popoutHost && _popoutHost.trigger(widgetId))
+            return true
+        return BarWidgetService.triggerWidgetPopout(widgetId)
+    }
+
+    // ── On-demand popout host ────────────────────────────────────────────────
+    // A zero-size, clipped, non-interactive host placed inside the bar pill. It
+    // instantiates each "popout" target widget off-bar (hidden) and exposes
+    // trigger(widgetId) to open that widget's own popout, anchored where the
+    // host sits (the dropdown button). Clipping to 0×0 keeps the embedded
+    // widgets invisible and unclickable while still letting them lay out, so
+    // triggerPopout() can compute a correct on-screen position. Inlined (rather
+    // than a sibling .qml) so it hot-reloads without a full shell restart.
+    Component {
+        id: popoutHostComp
+
+        Item {
+            id: hostItem
+            width: 0
+            height: 0
+            clip: true
+
+            Component.onDestruction: if (root._popoutHost === hostItem) root._popoutHost = null
+
+            function trigger(widgetId) {
+                for (var i = 0; i < memberRep.count; i++) {
+                    const m = memberRep.itemAt(i)
+                    if (m && m.targetId === widgetId && m.openPopout())
+                        return true
+                }
+                return false
+            }
+
+            Repeater {
+                id: memberRep
+                model: root._popoutTargets
+
+                delegate: Item {
+                    id: mem
+                    required property var modelData
+                    anchors.centerIn: parent
+
+                    readonly property string targetId: modelData
+                    readonly property var _parts: targetId ? targetId.split(":") : []
+                    readonly property string _pluginId: _parts.length > 0 ? _parts[0] : ""
+                    readonly property string _variantId: _parts.length > 1 ? _parts[1] : ""
+                    readonly property var _component: (root.pluginService && _pluginId && root.pluginService.pluginWidgetComponents)
+                        ? (root.pluginService.pluginWidgetComponents[_pluginId] || null)
+                        : null
+
+                    function openPopout() {
+                        if (memLoader.item && typeof memLoader.item.triggerPopout === "function") {
+                            memLoader.item.triggerPopout()
+                            return true
+                        }
+                        return false
+                    }
+
+                    Loader {
+                        id: memLoader
+                        active: mem._component !== null
+                        sourceComponent: mem._component
+                        anchors.centerIn: parent
+
+                        onLoaded: {
+                            if (!item)
+                                return
+                            try {
+                                if ("pluginId" in item)      item.pluginId = mem._pluginId
+                                if ("variantId" in item)     item.variantId = mem._variantId
+                                if (mem._variantId && "variantData" in item && root.pluginService?.getPluginVariantData)
+                                    item.variantData = root.pluginService.getPluginVariantData(mem._pluginId, mem._variantId)
+                                if ("pluginService" in item) item.pluginService = root.pluginService
+                                if ("popoutService" in item) item.popoutService = root.popoutService
+                            } catch (e) {
+                                console.warn("[dropdownMenu] on-demand injection failed for", mem.targetId, ":", e)
+                            }
+                        }
+                    }
+
+                    Binding { target: memLoader.item; when: memLoader.item && "axis" in memLoader.item;            property: "axis";            value: root.axis;            restoreMode: Binding.RestoreNone }
+                    Binding { target: memLoader.item; when: memLoader.item && "section" in memLoader.item;         property: "section";         value: root.section;         restoreMode: Binding.RestoreNone }
+                    Binding { target: memLoader.item; when: memLoader.item && "parentScreen" in memLoader.item;    property: "parentScreen";    value: root.parentScreen;    restoreMode: Binding.RestoreNone }
+                    Binding { target: memLoader.item; when: memLoader.item && "widgetThickness" in memLoader.item; property: "widgetThickness"; value: root.widgetThickness; restoreMode: Binding.RestoreNone }
+                    Binding { target: memLoader.item; when: memLoader.item && "barThickness" in memLoader.item;    property: "barThickness";    value: root.barThickness;    restoreMode: Binding.RestoreNone }
+                    Binding { target: memLoader.item; when: memLoader.item && "barSpacing" in memLoader.item;      property: "barSpacing";      value: root.barSpacing;      restoreMode: Binding.RestoreNone }
+                    Binding { target: memLoader.item; when: memLoader.item && "barConfig" in memLoader.item;       property: "barConfig";       value: root.barConfig;       restoreMode: Binding.RestoreNone }
+                    Binding { target: memLoader.item; when: memLoader.item && "blurBarWindow" in memLoader.item;   property: "blurBarWindow";   value: root.blurBarWindow;   restoreMode: Binding.RestoreNone }
+                }
+            }
+        }
+    }
+
     // ── Horizontal bar pill ──────────────────────────────────────────────────
 
     horizontalBarPill: Component {
-        Row {
-            spacing: Theme.spacingXS
+        Item {
+            implicitWidth: hRow.implicitWidth
+            implicitHeight: hRow.implicitHeight
 
-            DankIcon {
-                name: root.pillIcon
-                size: root.iconSize
-                color: Theme.surfaceText
-                anchors.verticalCenter: parent.verticalCenter
-                visible: root.pillShowIcon
+            Row {
+                id: hRow
+                anchors.centerIn: parent
+                spacing: Theme.spacingXS
+
+                DankIcon {
+                    name: root.pillIcon
+                    size: root.iconSize
+                    color: Theme.surfaceText
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: root.pillShowIcon
+                }
+
+                StyledText {
+                    text: root.pillText
+                    font.pixelSize: Theme.fontSizeMedium
+                    font.weight: Font.Medium
+                    color: Theme.surfaceText
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: root.pillShowLabel
+                }
             }
 
-            StyledText {
-                text: root.pillText
-                font.pixelSize: Theme.fontSizeMedium
-                font.weight: Font.Medium
-                color: Theme.surfaceText
-                anchors.verticalCenter: parent.verticalCenter
-                visible: root.pillShowLabel
+            Loader {
+                anchors.centerIn: parent
+                sourceComponent: popoutHostComp
+                onLoaded: root._popoutHost = item
             }
         }
     }
@@ -61,25 +186,38 @@ PluginComponent {
     // ── Vertical bar pill ────────────────────────────────────────────────────
 
     verticalBarPill: Component {
-        Column {
-            spacing: Theme.spacingXS
+        Item {
+            implicitWidth: vCol.implicitWidth
+            implicitHeight: vCol.implicitHeight
 
-            DankIcon {
-                name: root.pillIcon
-                size: root.iconSize
-                color: Theme.surfaceText
-                anchors.horizontalCenter: parent.horizontalCenter
-                visible: root.pillShowIcon
+            Column {
+                id: vCol
+                anchors.centerIn: parent
+                spacing: Theme.spacingXS
+
+                DankIcon {
+                    name: root.pillIcon
+                    size: root.iconSize
+                    color: Theme.surfaceText
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    visible: root.pillShowIcon
+                }
+
+                StyledText {
+                    text: root.pillText
+                    font.pixelSize: Theme.fontSizeSmall
+                    font.weight: Font.Medium
+                    color: Theme.surfaceText
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    horizontalAlignment: Text.AlignHCenter
+                    visible: root.pillShowLabel
+                }
             }
 
-            StyledText {
-                text: root.pillText
-                font.pixelSize: Theme.fontSizeSmall
-                font.weight: Font.Medium
-                color: Theme.surfaceText
-                anchors.horizontalCenter: parent.horizontalCenter
-                horizontalAlignment: Text.AlignHCenter
-                visible: root.pillShowLabel
+            Loader {
+                anchors.centerIn: parent
+                sourceComponent: popoutHostComp
+                onLoaded: root._popoutHost = item
             }
         }
     }
@@ -127,9 +265,8 @@ PluginComponent {
 
                         onExecutePopout: (widgetId) => {
                             root.closePopout()
-                            const ok = BarWidgetService.triggerWidgetPopout(widgetId)
-                            if (!ok)
-                                ToastService.showWarning(widgetId + " isn't on the bar — add it to a bar to open its popout")
+                            if (!root._openWidgetPopout(widgetId))
+                                ToastService.showWarning("Couldn't open " + widgetId + " — it isn't an installed widget plugin")
                         }
                     }
                 }
