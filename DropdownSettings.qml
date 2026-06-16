@@ -1101,6 +1101,7 @@ PluginSettings {
                                         text: itype
                                         font.pixelSize: 10
                                         color: itype === "action" ? Theme.onSecondaryContainer : Theme.onTertiaryContainer
+                                        font.weight: Font.Bold
                                     }
                                 }
 
@@ -1116,7 +1117,8 @@ PluginSettings {
                                         anchors.centerIn: parent
                                         text: idisplay
                                         font.pixelSize: 10
-                                        color: Theme.surfaceVariantText
+                                        color: Theme.surfaceText
+                                        font.weight: Font.Medium
                                     }
                                 }
 
