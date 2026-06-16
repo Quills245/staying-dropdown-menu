@@ -890,10 +890,76 @@ PluginSettings {
                 color: Theme.surfaceVariantText
             }
 
-            Repeater {
+            ListView {
+                id: itemsListView
+                width: itemEditorColumn.width
+                height: contentHeight
                 model: localItemsModel
+                interactive: false
+                spacing: Theme.spacingS
+
+                property int draggedIndex: -1
+                property int dropIndex: -1
+
+                function updateDropIndex(draggedIdx, localY) {
+                    const totalItems = localItemsModel.count
+                    let foundDropIndex = totalItems
+
+                    for (let i = 0; i < totalItems; i++) {
+                        const delegate = itemsListView.itemAtIndex(i)
+                        if (!delegate) continue
+
+                        const midpoint = delegate.y + delegate.height / 2
+                        if (localY < midpoint) {
+                            foundDropIndex = i
+                            break
+                        }
+                    }
+
+                    dropIndex = Math.max(0, Math.min(totalItems, foundDropIndex))
+                    draggedIndex = draggedIdx
+                }
+
+                function finishDrag() {
+                    if (draggedIndex < 0) {
+                        dropIndex = -1
+                        return
+                    }
+
+                    const fromIndex = draggedIndex
+                    let toIndex = dropIndex
+
+                    draggedIndex = -1
+                    dropIndex = -1
+
+                    if (toIndex < 0 || toIndex > localItemsModel.count || toIndex === fromIndex || toIndex === fromIndex + 1)
+                        return
+
+                    if (toIndex > fromIndex) toIndex -= 1
+
+                    localItemsModel.move(fromIndex, toIndex, 1)
+                    root._saveItems(root._currentItems())
+                }
+
+                move: Transition {
+                    NumberAnimation { properties: "y"; duration: 200; easing.type: Easing.InOutQuad }
+                }
+                displaced: Transition {
+                    NumberAnimation { properties: "y"; duration: 200; easing.type: Easing.InOutQuad }
+                }
+
+                // Drop indicator
+                footer: Component {
+                    Rectangle {
+                        width: itemsListView.width
+                        height: 2
+                        color: Theme.primary
+                        visible: itemsListView.draggedIndex >= 0 && itemsListView.dropIndex === localItemsModel.count
+                    }
+                }
 
                 delegate: StyledRect {
+                    id: itemDelegate
                     required property string itype
                     required property string iicon
                     required property string ilabel
@@ -915,7 +981,7 @@ PluginSettings {
                             ? (pluginService.availablePlugins[_idRef]?.name || _idRef)
                             : "(no label)")
 
-                    width: itemEditorColumn.width
+                    width: itemsListView.width
                     height: itemRow.implicitHeight + Theme.spacingS * 2
                     radius: Theme.cornerRadius
                     color: root.editingItemIndex === index
@@ -923,6 +989,17 @@ PluginSettings {
                         : (editItemArea.containsMouse ? Theme.surfaceContainerHighest : Theme.surfaceContainer)
 
                     Behavior on color { ColorAnimation { duration: Theme.shortDuration } }
+
+                    Rectangle {
+                        width: parent.width
+                        height: 2
+                        color: Theme.primary
+                        anchors.top: parent.top
+                        anchors.topMargin: -Theme.spacingS / 2
+                        visible: itemsListView.draggedIndex >= 0 && itemsListView.dropIndex === index
+                    }
+
+                    opacity: itemsListView.draggedIndex === index ? 0.5 : 1.0
 
                     // Click the row (outside the reorder/remove buttons) to edit it
                     MouseArea {
@@ -935,56 +1012,53 @@ PluginSettings {
 
                     Row {
                         id: itemRow
-                        anchors.fill: parent
+                        anchors.left: parent.left
+                        anchors.right: removeItemBtn.left
+                        anchors.top: parent.top
+                        anchors.bottom: parent.bottom
                         anchors.margins: Theme.spacingS
                         spacing: Theme.spacingS
 
-                        // Up / Down reorder
-                        Column {
-                            spacing: 2
+                        // Reorder handle
+                        Rectangle {
+                            width: 24; height: 32; radius: 4
+                            color: reorderArea.pressed ? Theme.surfaceContainerHighest : "transparent"
                             anchors.verticalCenter: parent.verticalCenter
 
-                            Rectangle {
-                                width: 24; height: 24; radius: 4
-                                color: upArea.containsMouse ? Theme.surfaceContainerHighest : "transparent"
-                                visible: index > 0
-
-                                DankIcon { anchors.centerIn: parent; name: "keyboard_arrow_up"; size: 16; color: Theme.surfaceText }
-
-                                MouseArea {
-                                    id: upArea
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
-                                        const items = root._currentItems()
-                                        const tmp = items[index - 1]
-                                        items[index - 1] = items[index]
-                                        items[index] = tmp
-                                        root._saveItems(items)
-                                    }
-                                }
+                            DankIcon {
+                                anchors.centerIn: parent
+                                name: "reorder"
+                                size: 18
+                                color: Theme.surfaceVariantText
                             }
 
-                            Rectangle {
-                                width: 24; height: 24; radius: 4
-                                color: downArea.containsMouse ? Theme.surfaceContainerHighest : "transparent"
-                                visible: index < localItemsModel.count - 1
+                            MouseArea {
+                                id: reorderArea
+                                anchors.fill: parent
+                                cursorShape: pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+                                preventStealing: true
 
-                                DankIcon { anchors.centerIn: parent; name: "keyboard_arrow_down"; size: 16; color: Theme.surfaceText }
+                                onPressed: (mouse) => {
+                                    mouse.accepted = true
+                                    const point = mapToItem(itemsListView, mouse.x, mouse.y)
+                                    itemsListView.updateDropIndex(index, point.y)
+                                }
 
-                                MouseArea {
-                                    id: downArea
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
-                                        const items = root._currentItems()
-                                        const tmp = items[index + 1]
-                                        items[index + 1] = items[index]
-                                        items[index] = tmp
-                                        root._saveItems(items)
-                                    }
+                                onPositionChanged: (mouse) => {
+                                    if (!pressed) return
+                                    mouse.accepted = true
+                                    const point = mapToItem(itemsListView, mouse.x, mouse.y)
+                                    itemsListView.updateDropIndex(index, point.y)
+                                }
+
+                                onReleased: (mouse) => {
+                                    mouse.accepted = true
+                                    itemsListView.finishDrag()
+                                }
+
+                                onCanceled: {
+                                    itemsListView.draggedIndex = -1
+                                    itemsListView.dropIndex = -1
                                 }
                             }
                         }
@@ -999,7 +1073,7 @@ PluginSettings {
                         Column {
                             anchors.verticalCenter: parent.verticalCenter
                             spacing: 2
-                            width: parent.width - 60 - Theme.iconSize - removeItemBtn.width - Theme.spacingS * 5
+                            width: parent.width - 24 - (Theme.iconSize - 4) - (parent.spacing * 2)
 
                             StyledText {
                                 text: resolvedLabel
@@ -1057,25 +1131,27 @@ PluginSettings {
                                 }
                             }
                         }
+                    }
 
-                        Rectangle {
-                            id: removeItemBtn
-                            width: 32; height: 32; radius: 16
-                            color: removeItemArea.containsMouse ? Theme.error : "transparent"
-                            anchors.verticalCenter: parent.verticalCenter
+                    Rectangle {
+                        id: removeItemBtn
+                        width: 32; height: 32; radius: 16
+                        color: removeItemArea.containsMouse ? Theme.error : "transparent"
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.right: parent.right
+                        anchors.rightMargin: Theme.spacingS
 
-                            DankIcon { anchors.centerIn: parent; name: "close"; size: 14; color: removeItemArea.containsMouse ? Theme.onError : Theme.surfaceVariantText }
+                        DankIcon { anchors.centerIn: parent; name: "close"; size: 14; color: removeItemArea.containsMouse ? Theme.onError : Theme.surfaceVariantText }
 
-                            MouseArea {
-                                id: removeItemArea
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    const items = root._currentItems()
-                                    items.splice(index, 1)
-                                    root._saveItems(items)
-                                }
+                        MouseArea {
+                            id: removeItemArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                const items = root._currentItems()
+                                items.splice(index, 1)
+                                root._saveItems(items)
                             }
                         }
                     }
