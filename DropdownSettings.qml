@@ -1100,7 +1100,7 @@ PluginSettings {
                                         anchors.centerIn: parent
                                         text: itype
                                         font.pixelSize: 10
-                                        color: itype === "action" ? Theme.onSecondaryContainer : Theme.onTertiaryContainer
+                                        color: Theme.surfaceText
                                         font.weight: Font.Bold
                                     }
                                 }
