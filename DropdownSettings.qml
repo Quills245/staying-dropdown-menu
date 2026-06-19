@@ -47,6 +47,9 @@ PluginSettings {
     property string newItemLabel: ""
     property string newItemCommand: ""
     property string newItemPluginId: ""
+    // Owning plugin of an IPC action being edited via the raw "action" form, so the
+    // plugin association survives an edit (the widget hosts it to keep IPC live).
+    property string newItemActionPluginId: ""
     property string newItemDisplay: "both"
     property string editingPillDisplay: "both"
     property int editingItemIndex: -1   // -1 = adding new; >=0 = editing that item
@@ -137,11 +140,15 @@ PluginSettings {
         return !!(pluginService?.pluginWidgetComponents && pluginService.pluginWidgetComponents[newItemPluginId])
     }
 
-    // Full tagged action list for the selected plugin: default + popout + embed + IPC
+    // Full tagged action list for the selected plugin: default + popout + IPC.
+    // Widget plugins have no meaningful "toggle" (togglePlugin only drives daemon
+    // slideouts / built-in panels), so their primary action is opening the popout.
     readonly property var pluginActionOptions: {
-        const opts = [{ label: "Toggle / open (default)", kind: "toggle" }]
+        const opts = []
         if (_selectedIsWidget)
             opts.push({ label: "Open its popout", kind: "popout" })
+        else
+            opts.push({ label: "Toggle / open (default)", kind: "toggle" })
         for (let i = 0; i < pluginCommandOptions.length; i++) {
             const o = pluginCommandOptions[i]
             opts.push({ label: "Action: " + o.label, kind: "ipc", target: o.target, fn: o.fn })
@@ -153,11 +160,15 @@ PluginSettings {
         pluginCommandOptions = []
         newPluginCmdTarget = ""
         newPluginCmdFn = ""
-        newPluginActionKind = "toggle"
+        // Widget plugins default to "Open its popout" (their only useful default);
+        // built-ins/daemons default to toggle.
+        newPluginActionKind = _selectedIsWidget ? "popout" : "toggle"
         _pluginCandidateTargets = []
         _detectingFor = pluginId
+        // Show the default action in the picker (popout for widgets, toggle otherwise)
+        // rather than a blank field. IPC actions, if any, append after this default.
         if (pluginCommandPicker)
-            pluginCommandPicker.currentValue = ""
+            pluginCommandPicker.currentValue = pluginActionOptions.length > 0 ? pluginActionOptions[0].label : ""
         if (!pluginId)
             return
         // Need the live IPC function lists to map detected targets -> functions
@@ -258,8 +269,12 @@ PluginSettings {
         for (let i = 0; i < localItemsModel.count; i++) {
             const r = localItemsModel.get(i)
             const obj = { type: r.itype, icon: r.iicon, label: r.ilabel, display: r.idisplay }
-            if (r.itype === "action") obj.command = r.icommand
-            else if (r.itype === "popout") obj.widgetId = r.iwidgetId
+            if (r.itype === "action") {
+                obj.command = r.icommand
+                // IPC actions sourced from a plugin carry the owning pluginId so the
+                // widget can instantiate it off-bar (keeping its IpcHandler live).
+                if (r.ipluginId) obj.pluginId = r.ipluginId
+            } else if (r.itype === "popout") obj.widgetId = r.iwidgetId
             else obj.pluginId = r.ipluginId   // plugin | embed
             items.push(obj)
         }
@@ -286,6 +301,7 @@ PluginSettings {
         newItemLabel = ""
         newItemCommand = ""
         newItemPluginId = ""
+        newItemActionPluginId = ""
         newItemDisplay = "both"
         newItemIpcTarget = ""
         newItemIpcFunction = ""
@@ -320,6 +336,7 @@ PluginSettings {
         if (r.itype === "action") {
             newItemType = "action"
             newItemCommand = r.icommand || ""
+            newItemActionPluginId = r.ipluginId || ""
             actionIconField.currentIcon = r.iicon || ""
             actionLabelField.text = r.ilabel || ""
             actionCommandField.text = r.icommand || ""
@@ -1404,9 +1421,10 @@ PluginSettings {
                             if (root.pluginScanning)
                                 return "Detecting available actions…"
                             const n = root.pluginCommandOptions.length
+                            const base = root._selectedIsWidget ? "open popout" : "toggle / open"
                             return n > 0
-                                ? "Action  (" + n + " IPC action" + (n === 1 ? "" : "s") + " detected — or toggle / open popout)"
-                                : "Action  (no IPC actions detected — use toggle or open popout)"
+                                ? "Action  (" + n + " IPC action" + (n === 1 ? "" : "s") + " detected — or " + base + ")"
+                                : "Action  (no IPC actions detected — use " + base + ")"
                         }
                         font.pixelSize: Theme.fontSizeSmall
                         color: Theme.surfaceVariantText
@@ -1418,12 +1436,13 @@ PluginSettings {
                         id: pluginCommandPicker
                         width: parent.width
                         enabled: !root.pluginScanning
-                        emptyText: "Toggle / open (default)"
+                        emptyText: ""
                         options: root.pluginActionOptions.map(o => o.label)
                         onValueChanged: (value) => {
                             const opt = root.pluginActionOptions.find(o => o.label === value)
                             if (!opt) {
-                                root.newPluginActionKind = "toggle"
+                                const def = root.pluginActionOptions[0]
+                                root.newPluginActionKind = def ? def.kind : "toggle"
                                 root.newPluginCmdTarget = ""
                                 root.newPluginCmdFn = ""
                                 return
@@ -1442,9 +1461,9 @@ PluginSettings {
                                 && !root._pluginOnBar(root.newItemPluginId)
                         }
                         width: parent.width
-                        text: "⚠ This plugin isn't on any bar — \"Open its popout\" only works once it's added to a bar."
+                        text: "This plugin isn't on a bar — the dropdown runs it in the background to open its popout on demand."
                         font.pixelSize: Theme.fontSizeSmall
-                        color: Theme.error
+                        color: Theme.surfaceVariantText
                         wrapMode: Text.WordWrap
                     }
 
@@ -1668,6 +1687,10 @@ PluginSettings {
                                 command: root.newItemCommand,
                                 display: root.newItemDisplay
                             }
+                            // Preserve the owning plugin of a plugin-sourced IPC action
+                            // through an edit so the widget keeps hosting it.
+                            if (root.newItemActionPluginId)
+                                newItem.pluginId = root.newItemActionPluginId
                         } else if (root.newItemType === "ipc") {
                             if (!root.newItemIpcTarget || !root.newItemIpcFunction) {
                                 ToastService.showError("Please select an IPC target and function")
@@ -1692,6 +1715,7 @@ PluginSettings {
                                     icon: root.newItemIcon,
                                     label: root.newItemLabel || (pName + ": " + root.newPluginCmdFn),
                                     command: "dms ipc " + root.newPluginCmdTarget + " " + root.newPluginCmdFn,
+                                    pluginId: root.newItemPluginId,
                                     display: root.newItemDisplay
                                 }
                             } else if (root.newPluginActionKind === "popout") {

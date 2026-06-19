@@ -33,14 +33,19 @@ PluginComponent {
     popoutWidth: 280
     popoutHeight: Math.max(64, menuItems.length * 48 + 16)
 
-    // Unique widget ids for "popout" items — each is instantiated off-bar so its
-    // popout can be opened from the menu without the widget being on a bar.
-    readonly property var _popoutTargets: {
+    // Plugin/widget ids to instantiate off-bar so menu items work without the
+    // widget being on a bar:
+    //   • "popout" items  → so the widget exists to call triggerPopout() on.
+    //   • plugin "action" items (IPC) → so the plugin's IpcHandler (declared in
+    //     its widget) is live and `dms ipc …` resolves.
+    readonly property var _hostedTargets: {
         const out = []
+        const add = (id) => { if (id && out.indexOf(id) < 0) out.push(id) }
         for (var i = 0; i < menuItems.length; i++) {
             const it = menuItems[i]
-            if (it && it.type === "popout" && it.widgetId && out.indexOf(it.widgetId) < 0)
-                out.push(it.widgetId)
+            if (!it) continue
+            if (it.type === "popout" && it.widgetId) add(it.widgetId)
+            else if (it.type === "action" && it.pluginId) add(it.pluginId)
         }
         return out
     }
@@ -87,7 +92,7 @@ PluginComponent {
 
             Repeater {
                 id: memberRep
-                model: root._popoutTargets
+                model: root._hostedTargets
 
                 delegate: Item {
                     id: mem
