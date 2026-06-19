@@ -2,7 +2,7 @@
 
 A [DankMaterialShell](https://github.com/AvengeMedia/DankMaterialShell) (DMS) bar plugin that adds a configurable button to the bar which opens a **dropdown menu** of actions, plugin toggles, popouts, and DMS IPC commands.
 
-> Status: **beta** (v0.6.0)
+> Status: **beta** (v0.7.0)
 
 ## Screenshots
 
@@ -14,14 +14,15 @@ A [DankMaterialShell](https://github.com/AvengeMedia/DankMaterialShell) (DMS) ba
   - **Custom Action** — run any shell command.
   - **Plugin** — toggle/open a plugin, **Open its popout** (works even if the widget isn't on a bar — see below), or run one of its **detected IPC actions**.
   - **IPC Command** — pick any live `dms ipc` target + function (auto-discovered from your running shell).
-- **On-demand popouts** — a "popout" item opens the target widget's *real* popout without that widget taking up bar space. The dropdown instantiates the widget off-bar and triggers its own popout, anchored under the dropdown button. Put a widget behind the menu instead of on the bar.
+- **On-demand popouts & actions** — "popout" items open the target widget's *real* popout, and a plugin's **IPC actions** fire, **without that widget taking up bar space**. The dropdown instantiates the plugin off-bar so its popout and `IpcHandler` work, anchored under the dropdown button. Put a widget behind the menu instead of on the bar.
+- **Smart action defaults** — a widget plugin defaults to opening its popout; daemons and built-in panels default to toggle/open (the action that actually makes sense for each).
 - **Per-plugin action detection** — selecting a plugin scans it for `IpcHandler` actions and offers them directly (e.g. a Pomodoro plugin exposes *Start Work*, *Reset*, …).
 - **Quick Add** chips for common DMS panels (Control Center, Notifications, Clipboard, …) — one click to add, with live "already added" highlighting.
 - **Smart plugin list** — only shows plugins you can actually drive from the menu, and flags ones that are **not enabled** or **not on a bar**.
 - **Full Material icon picker** (searchable, all ~4000 symbols) for the button and each item.
 - **Display modes** — show icon, text, or both, per bar pill and per item.
 - **Multiple dropdowns** via variants — each is a separate bar widget.
-- Click-to-edit, reorder, and remove items; collapsible editor.
+- **Drag-to-reorder** items by a handle, click-to-edit, and remove; collapsible editor.
 
 ## Requirements
 
