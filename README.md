@@ -9,6 +9,7 @@ A [DankMaterialShell](https://github.com/AvengeMedia/DankMaterialShell) (DMS) ba
 ![A Dropdown Menu open on the bar](assets/dropdown-menu.png)
 
 ## Features
+- **This fork's defining (and only) feature:** The dropdown menu stays open after you click on an option, useful for options that you might want to click on repeatedly. 
 
 - **One bar button → a menu of anything.** Build a dropdown of mixed item types:
   - **Custom Action** — run any shell command.
@@ -50,7 +51,7 @@ Then enable it in **DMS Settings → Plugins**, configure a dropdown, and add it
 4. Set the bar pill's icon, label, and display mode.
 5. **Bar Settings → Add Widget** to place the dropdown on your bar.
 
-~~Clicking the dropdown on the bar opens/closes its menu.~~ Getting rid of this line is the reason this fork exists :P
+Clicking the dropdown on the bar opens/closes its menu.
 
 ## Permissions
 
