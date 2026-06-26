@@ -56,7 +56,7 @@ Then enable it in **DMS Settings → Plugins**, configure a dropdown, and add it
 4. Set the bar pill's icon, label, and display mode.
 5. **Bar Settings → Add Widget** to place the dropdown on your bar.
 
-Clicking the dropdown on the bar opens/closes its menu.
+~~Clicking the dropdown on the bar opens/closes its menu.~~ Getting rid of this line is the reason this fork exists :P
 
 ## Permissions
 
