@@ -260,7 +260,6 @@ PluginComponent {
                         onExecuteAction: (command) => {
                             actionProcess.command = ["sh", "-c", command]
                             actionProcess.running = true
-                            root.closePopout()
                         }
 
                         onExecutePlugin: (pluginId) => {
