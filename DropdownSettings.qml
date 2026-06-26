@@ -8,7 +8,7 @@ import qs.Modules.Plugins
 
 PluginSettings {
     id: root
-    pluginId: "dropdownMenu"
+    pluginId: "stayingdropdownMenu"
 
     // The variant currently being edited in Section B
     property string editingVariantId: ""
@@ -441,7 +441,7 @@ PluginSettings {
         // Only plugins we can actually drive from the menu: widgets (open popout)
         // and daemons (toggle / IPC). Desktop and launcher plugins are excluded.
         const installed = pluginService.availablePluginsList
-            .filter(p => p.id !== "dropdownMenu" && p.id !== "widgetGroup"
+            .filter(p => p.id !== "stayingdropdownMenu" && p.id !== "widgetGroup"
                       && (p.type === "widget" || p.type === "daemon"))
             .map(p => ({ id: p.id, name: p.name, isPlugin: true, isWidget: p.type === "widget" }))
             .sort((a, b) => a.name.localeCompare(b.name))
@@ -637,7 +637,7 @@ PluginSettings {
                     if (newId) {
                         // Reload the plugin so the bar settings widget picker
                         // picks up the new variant immediately
-                        Qt.callLater(() => pluginService.reloadPlugin("dropdownMenu"))
+                        Qt.callLater(() => pluginService.reloadPlugin("stayingdropdownMenu"))
                         ToastService.showInfo("Dropdown created: " + root.newVariantName)
                     } else {
                         ToastService.showError("Failed to save — plugin service unavailable")

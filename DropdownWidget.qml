@@ -132,7 +132,7 @@ PluginComponent {
                                 if ("pluginService" in item) item.pluginService = root.pluginService
                                 if ("popoutService" in item) item.popoutService = root.popoutService
                             } catch (e) {
-                                console.warn("[dropdownMenu] on-demand injection failed for", mem.targetId, ":", e)
+                                console.warn("[stayingdropdownMenu] on-demand injection failed for", mem.targetId, ":", e)
                             }
                         }
                     }
