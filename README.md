@@ -42,8 +42,8 @@ dms plugins install dropdownMenu
 Clone into your DMS plugins directory:
 
 ```sh
-git clone https://github.com/rdannenbring/dropdown-menu.git \
-  ~/.config/DankMaterialShell/plugins/dropdownMenu
+git clone https://github.com/Quills245/staying-dropdown-menu.git \
+  ~/.config/DankMaterialShell/plugins/staying-dropdown-menu
 ```
 
 Then enable it in **DMS Settings → Plugins**, configure a dropdown, and add it to your bar via **Bar Settings → Add Widget**.
