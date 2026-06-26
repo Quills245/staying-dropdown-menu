@@ -31,12 +31,6 @@ A [DankMaterialShell](https://github.com/AvengeMedia/DankMaterialShell) (DMS) ba
 
 ## Install
 
-### From the DMS plugin registry (once published)
-
-```sh
-dms plugins install dropdownMenu
-```
-
 ### Manual
 
 Clone into your DMS plugins directory:
