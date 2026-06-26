@@ -1,7 +1,7 @@
 {
-  "id": "dropdownMenu",
-  "name": "Dropdown Menu",
-  "description": "Configurable bar button that opens a dropdown menu of actions, plugin toggles, popouts, and IPC commands",
+  "id": "stayingdropdownMenu",
+  "name": "Dropdown Menu That Stays",
+  "description": "Configurable bar button that opens a dropdown menu of actions, plugin toggles, popouts, and IPC commands, modified so the popup does not go away when clicked.",
   "version": "0.7.0",
   "author": "rdannenbring",
   "type": "widget",
@@ -10,7 +10,7 @@
   "icon": "expand_circle_down",
   "component": "./DropdownWidget.qml",
   "settings": "./DropdownSettings.qml",
-  "repo": "https://github.com/rdannenbring/dropdown-menu",
-  "screenshot": "https://raw.githubusercontent.com/rdannenbring/dropdown-menu/main/assets/dropdown-menu.png",
+  "repo": "https://github.com/Quills245/staying-dropdown-menu",
+  "screenshot": "https://raw.githubusercontent.com/Quills245/staying-dropdown-menu/main/assets/dropdown-menu.png",
   "permissions": ["settings_read", "settings_write", "process"]
 }
