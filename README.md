@@ -9,7 +9,7 @@ A [DankMaterialShell](https://github.com/AvengeMedia/DankMaterialShell) (DMS) ba
 ![A Dropdown Menu open on the bar](assets/dropdown-menu.png)
 
 ## Features
-- **This fork's defining (and only) feature:** The dropdown menu stays open after you click on an option, useful for options that you might want to click on repeatedly. 
+- **This fork's defining (and only) feature:** The dropdown menu stays open after you click on an option (of the custom action/command type), useful for options that you might want to click on repeatedly. 
 
 - **One bar button → a menu of anything.** Build a dropdown of mixed item types:
   - **Custom Action** — run any shell command.
