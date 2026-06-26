@@ -3,7 +3,7 @@
   "name": "Dropdown Menu That Stays",
   "description": "Configurable bar button that opens a dropdown menu of actions, plugin toggles, popouts, and IPC commands, modified so the popup does not go away when clicked.",
   "version": "0.7.0",
-  "author": "rdannenbring, Quills245",
+  "author": "rdannenbring, staying fork by Quills245",
   "type": "widget",
   "category": "utilities",
   "capabilities": ["dankbar-widget"],
